@@ -217,6 +217,10 @@ public class UI_Villager : IUI_Additional
         if (currentlyLoadedVillagerIndex == -1)
             return;
 
+        ushort[] flags = loadedVillager.GetEventFlagsSave();
+        flags[9] = (ushort)0;
+        loadedVillager.SetEventFlagsSave(flags);
+
         try
         {
             byte[] villager = loadedVillager.Data;
