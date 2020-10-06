@@ -315,7 +315,10 @@ public class UI_Villager : IUI_Additional
             if (villagerDump == null || villagerHouse == null)
                 throw new Exception("Villager not found: " + newVillager);
 
-            loadVillagerData(new Villager2(villagerDump), new VillagerHouse(villagerHouse));
+            // force replaced villager to be moving out
+            var villager = new Villager2(villagerDump);
+            villager.MovingOut = true;
+            loadVillagerData(villager, new VillagerHouse(villagerHouse));
         }
         catch (Exception e)
         {
