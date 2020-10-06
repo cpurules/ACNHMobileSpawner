@@ -217,6 +217,7 @@ public class UI_Villager : IUI_Additional
         if (currentlyLoadedVillagerIndex == -1)
             return;
 
+        // force AbandonedHouse = 0
         ushort[] flags = loadedVillager.GetEventFlagsSave();
         flags[9] = (ushort)0;
         loadedVillager.SetEventFlagsSave(flags);
