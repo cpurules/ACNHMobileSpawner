@@ -21,13 +21,14 @@ public static class OffsetHelper
     private static ulong getPlayerStart(ulong invOffset) => invOffset - 0x10 - PlayerOtherStartPadding + 0x110;
     public static ulong getPlayerIdAddress(ulong invOffset) => getPlayerStart(invOffset) + 0xAFA8;
     public static ulong getPlayerProfileMainAddress(ulong invOffset) => getPlayerStart(invOffset) + 0x116A0;
+    public static ulong getManpu(ulong invOffset) => invOffset - 0x10 + 0xAF7C + 72;
 
 
     // main save offsets
     public const ulong TurnipAddress = 0xABE0AEE0;
     public const ulong VillagerAddress = TurnipAddress - 0x41D460 + 0x10;
     public const ulong VillagerHouseAddress = TurnipAddress - 0x41D460 + 0x419638;
-    public const ulong VillagerHouseBufferDiff = 0xB25900;
+    public const ulong BackupSaveDiff = 0xB25900;
 
     public const ulong FieldItemStart = VillagerAddress - 0x10 + 0x20CC0C;
 }
