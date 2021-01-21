@@ -7,7 +7,10 @@ using UnityEngine.UI;
 
 public class UI_SetControl : MonoBehaviour
 {
-	public InputField FCount;
+    private int MAXSTACKSTAPSNEEDED = 4;
+    private float MAXSTACKSECONDSALIVE = 1f;
+
+    public InputField FCount;
 	public InputField FUses;
 	public InputField FFlagZero;
 	public InputField FFlagOne;
@@ -18,7 +21,17 @@ public class UI_SetControl : MonoBehaviour
 	public Dropdown BCount;
 	public Dropdown BUses;
 
-	private void Start()
+    public Text MaxCountTapsText;
+    public Button SpawnVariationsButton;
+
+    private bool inited = false;
+
+    private float maxStackIntervalTimer = -1;
+    private int maxStackTapCount = 0;
+
+    public static int CurrentVariationCount = 0;
+
+    private void Start()
 	{
 		BCount.onValueChanged.AddListener(delegate
 		{
@@ -34,11 +47,52 @@ public class UI_SetControl : MonoBehaviour
         });
 		BCount.gameObject.SetActive(false);
 		BUses.gameObject.SetActive(false);
+
+        inited = true;
 	}
+
+    public void IncrementTapCount()
+    {
+        Item refItem = new Item();
+        refItem = UI_SearchWindow.LastLoadedSearchWindow.GetAsItem(refItem);
+        if (refItem.ItemId == Item.DIYRecipe)
+            return;
+        if (ItemInfo.TryGetMaxStackCount(refItem, out _))
+        {
+            maxStackIntervalTimer = MAXSTACKSECONDSALIVE;
+            maxStackTapCount++;
+        }
+    }
 
 	private void Update()
 	{
-	}
+        if (maxStackIntervalTimer > 0)
+        {
+            maxStackIntervalTimer -= Time.deltaTime;
+            MaxCountTapsText.gameObject.SetActive(true);
+            MaxCountTapsText.text = string.Format("Max stack: {0} taps", MAXSTACKSTAPSNEEDED - maxStackTapCount);
+            if (maxStackTapCount >= MAXSTACKSTAPSNEEDED)
+            {
+                MaxStack();
+                maxStackIntervalTimer = -1;
+                maxStackTapCount = 0;
+            }
+        }
+        else
+        {
+            MaxCountTapsText.gameObject.SetActive(false);
+            maxStackIntervalTimer = -1;
+            maxStackTapCount = 0;
+        }
+    }
+
+    private void MaxStack()
+    {
+        Item refItem = new Item();
+        refItem = UI_SearchWindow.LastLoadedSearchWindow.GetAsItem(refItem);
+        if (ItemInfo.TryGetMaxStackCount(refItem, out var max))
+            FCount.text = (max - 1).ToString();
+    }
 
 	public void InitNumbers()
 	{
@@ -56,7 +110,7 @@ public class UI_SetControl : MonoBehaviour
 
 	public void CompileBodyFabricFromCount() // probably unreadable now due to il rebuild, refactor (not a simple modulo function because some item bodies/fabrics are invalid, so need to be built from string)
 	{
-		if (!BCount.gameObject.activeSelf && !BUses.gameObject.activeSelf)
+		if (!BCount.gameObject.activeInHierarchy && !BUses.gameObject.activeInHierarchy)
 		{
 			return;
 		}
@@ -64,15 +118,18 @@ public class UI_SetControl : MonoBehaviour
 		int num2 = -1;
 		int num3 = -1;
 		List<int> list = new List<int>();
-		for (int i = 0; i < BCount.options.Count; i++)
-		{
-			int num4 = int.Parse(GetUntilOrEmpty(BCount.options[i].text));
-			list.Add(num4);
-			if (num4 == num)
-			{
-				num2 = i;
-			}
-		}
+        if (BCount.gameObject.activeInHierarchy) // if off, this doesn't have any body values
+        {
+            for (int i = 0; i < BCount.options.Count; i++)
+            {
+                int num4 = int.Parse(GetUntilOrEmpty(BCount.options[i].text));
+                list.Add(num4);
+                if (num4 == num)
+                {
+                    num2 = i;
+                }
+            }
+        }
 		if (num2 != -1)
 		{
 			BCount.value=(num2);
@@ -157,6 +214,9 @@ public class UI_SetControl : MonoBehaviour
 		}
 		BCount.RefreshShownValue();
 		CompileCountFromBodyFabric();
+
+        CurrentVariationCount = BCount.options.Count;
+        SpawnVariationsButton.gameObject.SetActive(true);
 	}
 
 	public void CreateFabric(string[] values)

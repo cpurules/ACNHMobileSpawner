@@ -24,6 +24,9 @@ public class UI_SearchWindow : MonoBehaviour
 
     public static UI_SearchWindow LastLoadedSearchWindow;
 
+    public delegate void NewItemSelected(ushort itemId, string itemNameCurrentLanguage); // Load the item if you need the NHSE.Core.Item
+    public NewItemSelected OnNewItemSelected;
+
     //editor vars
     public RectTransform SelectionOverlay;
     public Text ItemSelectedName;
@@ -39,6 +42,8 @@ public class UI_SearchWindow : MonoBehaviour
     public GameObject SpriteImageRoot;
     public RawImage SpriteImageMain;
     public PShowOnInternalItem InternalItemWarning;
+    public Button UnfrontButton;
+    public GameObject FrontBlocker;
 
     public GameObject FlowerButtonRoot;
     public GameObject TreeButtonRoot;
@@ -66,6 +71,9 @@ public class UI_SearchWindow : MonoBehaviour
     private List<UI_SearchItem> spawnedObjects;
 
     private Coroutine currentAnimationFuction;
+
+    private bool isAtFront = false;
+    private int siblingIndexLast = 0;
 
     private void Start()
     {
@@ -125,9 +133,21 @@ public class UI_SearchWindow : MonoBehaviour
         SetController.FCount.text = i.Count.ToString();
     }
 
-    private void Update()
+    public void UnsetFront() => SetAtFront(false, true);
+    public void SetAtFront(bool front, bool showSet = true)
     {
+        if (front && !isAtFront)
+            siblingIndexLast = transform.GetSiblingIndex();
 
+        if (front)
+            transform.SetAsLastSibling();
+        else
+            transform.SetSiblingIndex(siblingIndexLast);
+
+        UI_ACItemGrid.LastInstanceOfItemGrid.Filler.gameObject.SetActive(showSet);
+        UnfrontButton.gameObject.SetActive(front);
+        FrontBlocker.SetActive(front);
+        isAtFront = front;
     }
 
     public void UpdateFilter(Dropdown filt)
@@ -284,6 +304,7 @@ public class UI_SearchWindow : MonoBehaviour
         else
             TreeButtonRoot.gameObject.SetActive(false);*/ //uncomment this if you want star tree editor again for whatever reason
 
+        SetController.SpawnVariationsButton.gameObject.SetActive(false);
         short remakeIndex = ItemRemakeUtil.GetRemakeIndex(Convert.ToUInt16(CurrentItemID));
         if (remakeIndex < 0)
         {
@@ -329,7 +350,9 @@ public class UI_SearchWindow : MonoBehaviour
             StopCoroutine(currentAnimationFuction);
         }
         currentAnimationFuction = StartCoroutine(sendSelectorToSelected());
+        SetController.FFlagOne.gameObject.SetActive(CurrentItemID >= 60_000);
 
+        OnNewItemSelected?.Invoke((ushort)id, sItem.RawValue);
         UpdateSprite();
     }
 
@@ -355,7 +378,7 @@ public class UI_SearchWindow : MonoBehaviour
 
     public void LoadItem(Item item)
     {
-        if (stopSearch)
+        if (stopSearch || item.ItemId == Item.NONE)
             return;
         CurrentItemID = item.ItemId;
         if (CurrentItemID == MESSAGEBOTTLEITEM)
@@ -393,9 +416,10 @@ public class UI_SearchWindow : MonoBehaviour
             SetController.FFlagZero.text = item.SystemParam.ToString();
         }
 
-        if (itemKind == ItemKind.Kind_MessageBottle)
+        if (itemKind == ItemKind.Kind_MessageBottle || CurrentItemID >= 60_000)
         {
             SetController.FFlagOne.text = item.AdditionalParam.ToString();
+            SetController.FFlagOne.gameObject.SetActive(true);
         }
         else
         {
@@ -470,7 +494,10 @@ public class UI_SearchWindow : MonoBehaviour
         switch (filter)
         {
             case ItemFilter.Items:
-                return GameInfo.Strings.ItemDataSource.ToList();
+                var data = GameInfo.Strings.ItemDataSource.ToList();
+                var field = FieldItemList.Items.Select(z => z.Value).ToList();
+                data.Add(field, GameInfo.Strings.InternalNameTranslation);
+                return data;
             case ItemFilter.MsgBottle:
                 return GameInfo.Strings.CreateItemDataSource(RecipeList.Recipes, false);
             case ItemFilter.Recipes:

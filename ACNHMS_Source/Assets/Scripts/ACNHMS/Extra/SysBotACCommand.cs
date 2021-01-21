@@ -9,6 +9,8 @@ public class SysBotACCommand : MonoBehaviour
 {
     private char CommandPrefix = '$';
 
+    public void GetCommandOrder() => GetCommandFromInventory("ordercat");
+
     public void GetCommandFromLoadedItem()
     {
         CommandPrefix = UI_Settings.GetPrefix();
@@ -28,10 +30,17 @@ public class SysBotACCommand : MonoBehaviour
         UI_Popup.CurrentInstance.CreatePopupMessage(1.25f, $"Copied\r\n{toCopy}\r\nto clipboard.", () => { });
     }
 
-    public void GetCommandFromInventory()
+    public void GetCommandFromInventory(string commandName = "")
     {
         CommandPrefix = UI_Settings.GetPrefix();
         var items = UI_ACItemGrid.LastInstanceOfItemGrid.Items;
+        if (!IsItemArrayInventorySafe(items.ToArray(), out var fail))
+        {
+            int failIndex = items.IndexOf(fail);
+            PopupHelper.CreateError($"Item {failIndex} is a field item, these items cannot be in an inventory.", 3);
+            return;
+        }
+
         var hexes = new List<string>();
         int count = 0;
         bool tooManyItems = false;
@@ -39,7 +48,7 @@ public class SysBotACCommand : MonoBehaviour
         {
             if (item.ItemId != Item.NONE)
             {
-                if (count > 8)
+                if (count > 8 && commandName == "")
                 {
                     tooManyItems = true;
                     break;
@@ -60,9 +69,9 @@ public class SysBotACCommand : MonoBehaviour
         }
 
         var itemshexSet = string.Join(" ", hexes.ToArray());
-        var toCopy = $"{CommandPrefix}drop {itemshexSet}";
+        var toCopy = $"{CommandPrefix}{(commandName == "" ? "drop" : commandName)} {itemshexSet}";
         GUIUtility.systemCopyBuffer = toCopy;
-        if (!tooManyItems)
+        if (!tooManyItems || commandName != "") 
             UI_Popup.CurrentInstance.CreatePopupMessage(1.25f, $"Copied\r\n{toCopy}\r\nto clipboard.", () => {});
         else
             UI_Popup.CurrentInstance.CreatePopupMessage(5f, $"<color=red>You have too many items! Only the first 9 have been transferred to the command!</color>\r\n\r\nCopied\r\n{toCopy}\r\nto clipboard.", () => { });
@@ -116,5 +125,20 @@ public class SysBotACCommand : MonoBehaviour
             Array.Copy(source, index * maxResultElements, target[index], 0, elementsInThisArray);
         }
         return target;
+    }
+
+    public static bool IsItemArrayInventorySafe(Item[] items, out Item failed)
+    {
+        foreach (Item i in items)
+        {
+            if (i.ItemId >= 60_000 && !i.IsNone)
+            {
+                failed = i;
+                return false;
+            }
+        }
+
+        failed = null;
+        return true;
     }
 }

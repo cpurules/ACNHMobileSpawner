@@ -80,12 +80,13 @@ public class UI_SetControlFiller : MonoBehaviour
         DeleteItem.GetComponentInChildren<Text>().text = "Delete item \n(" + itemIndex + ")";
     }
 
-	public void FillSelected(int index)
+	public void FillSelected(int index, ushort nCount = ushort.MaxValue)
 	{
         if (SearchWindow.IsNoItemMode)
             return;
 
         Item asItem = SearchWindow.GetAsItem(lastItem);
+        if (nCount != ushort.MaxValue) asItem.Count = nCount;
 		ItemGrid.SetItemAt(asItem, index, setFocus: true);
 	}
 
@@ -106,12 +107,38 @@ public class UI_SetControlFiller : MonoBehaviour
     {
         if (SearchWindow.IsNoItemMode)
             return;
+        bool isCatalogueMode = UI_Settings.GetCatalogueMode();
 
         for (int i = 0; i < 40; ++i)
         {
             lastItem = ItemGrid.GetItemAt(i);
-            FillSelected(i);
+            if (!(isCatalogueMode && !lastItem.IsNone))
+                FillSelected(i);
         }
+    }
+
+    public void FillVariations()
+    {
+        if (SearchWindow.IsNoItemMode)
+            return;
+
+        int varCount = UI_SetControl.CurrentVariationCount;
+        int currentVar = 0;
+        int start = ItemGrid.CurrentSelected;
+        for (int i = start; i < 40; ++i)
+        {
+            if (currentVar >= varCount)
+                break;
+            lastItem = ItemGrid.GetItemAt(i);
+            if (lastItem.IsNone)
+            {
+                FillSelected(i, (ushort)currentVar);
+                currentVar++;
+            }
+        }
+
+        if (currentVar < (varCount - 1))
+            UI_Popup.CurrentInstance.CreatePopupChoice("You don't have enough inventory space from the selected inventory slot to set all variations. Select an earlier item slot to start the placement of variations, or clear up your inventory first.", "OK", () => { }, Color.red);
     }
 
     public void DeleteItemAt(int index)
