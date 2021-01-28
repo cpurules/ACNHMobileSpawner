@@ -74,5 +74,25 @@ namespace NHSE.Injection
             Array.Copy(data, index, result, 0, length);
             return result;
         }
+
+        public void FreezeBytes(byte[] data, uint offset)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UnFreezeBytes(uint offset)
+        {
+            throw new NotImplementedException();
+        }
+
+        public byte GetFreezeCount()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UnfreezeAll()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
