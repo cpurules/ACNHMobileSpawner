@@ -229,7 +229,7 @@ public class SpriteController : MonoBehaviour
         }
 
         Texture2D toAssignImage = ResourceLoader.GetLeafImage();
-        System.Drawing.Color itemColor = ItemColor.GetItemColor(t);
+        Beri.Drawing.Color itemColor = ItemColor.GetItemColor(t);
         c = new Color(itemColor.R / 255f, itemColor.G / 255f, itemColor.B / 255f, itemColor.A / 255f);
 
         string path = GetImagePathFromItem(t);
@@ -273,7 +273,7 @@ public class SpriteController : MonoBehaviour
             hexToUse = itemidAsHex;
 
 
-        if (ItemInfo.GetItemKind(t).IsFlower()) // nhse and poker handle flowers differently
+        if (ItemInfo.GetItemKind(t).IsFlower()) 
         {
             pathRet = GetImagePathFromID(hexToUse, flowerSource);
             if (pathRet == "")

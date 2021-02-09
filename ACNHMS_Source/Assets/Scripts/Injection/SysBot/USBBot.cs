@@ -159,13 +159,13 @@ namespace NHSE.Injection
             }
         }
 
-        public byte[] ReadBytes(uint offset, int length)
+        public byte[] ReadBytes(ulong offset, int length, RWMethod method = RWMethod.Heap)
         {
             if (length > MaximumTransferSize)
-                return ReadBytesLarge(offset, length);
+                return ReadBytesLarge(offset, length, method);
             lock (_sync)
             {
-                var cmd = SwitchCommand.PeekRaw(offset, length);
+                var cmd = SwitchCommandMethodHelper.GetPeekCommand(offset, length, method, true);
                 SendInternal(cmd);
 
                 // give it time to push data back
@@ -178,31 +178,46 @@ namespace NHSE.Injection
             }
         }
 
-        public void WriteBytes(byte[] data, uint offset)
+        public void WriteBytes(byte[] data, ulong offset, RWMethod method = RWMethod.Heap)
         {
             if (data.Length > MaximumTransferSize)
-                WriteBytesLarge(data, offset);
+                WriteBytesLarge(data, offset, method);
             lock (_sync)
             {
-                SendInternal(SwitchCommand.PokeRaw(offset, data));
+                SendInternal(SwitchCommandMethodHelper.GetPokeCommand(offset, data, method, true));
 
                 // give it time to push data back
                 Thread.Sleep((data.Length / 256) + UI_Settings.GetThreadSleepTime());
             }
         }
 
-        private void WriteBytesLarge(byte[] data, uint offset)
+        public byte[] GetVersion()
+        {
+            lock (_sync)
+            {
+                var cmd = SwitchCommand.Version();
+                SendInternal(cmd);
+
+                // give it time to push data back
+                Thread.Sleep(1 + UI_Settings.GetThreadSleepTime());
+                var buffer = new byte[9];
+                var _ = ReadInternal(buffer);
+                return buffer;
+            }
+        }
+
+        private void WriteBytesLarge(byte[] data, ulong offset, RWMethod method)
         {
             int byteCount = data.Length;
             for (int i = 0; i < byteCount; i += MaximumTransferSize)
-                WriteBytes(SubArray(data, i, MaximumTransferSize), offset + (uint)i);
+                WriteBytes(SubArray(data, i, MaximumTransferSize), offset + (uint)i, method);
         }
 
-        private byte[] ReadBytesLarge(uint offset, int length)
+        private byte[] ReadBytesLarge(ulong offset, int length, RWMethod method)
         {
             List<byte> read = new List<byte>();
             for (int i = 0; i < length; i += MaximumTransferSize)
-                read.AddRange(ReadBytes(offset + (uint)i, Math.Min(MaximumTransferSize, length - i)));
+                read.AddRange(ReadBytes(offset + (uint)i, Math.Min(MaximumTransferSize, length - i), method));
             return read.ToArray();
         }
 
@@ -231,6 +246,11 @@ namespace NHSE.Injection
         }
 
         public void UnfreezeAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ulong FollowMainPointer(long[] jumps)
         {
             throw new NotImplementedException();
         }

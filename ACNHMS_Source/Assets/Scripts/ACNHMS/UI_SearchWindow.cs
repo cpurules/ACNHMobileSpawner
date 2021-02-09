@@ -24,8 +24,10 @@ public class UI_SearchWindow : MonoBehaviour
 
     public static UI_SearchWindow LastLoadedSearchWindow;
 
-    public delegate void NewItemSelected(ushort itemId, string itemNameCurrentLanguage); // Load the item if you need the NHSE.Core.Item
+    public delegate void NewItemSelected(ushort itemId, string itemNameCurrentLanguage); // Load the item if you need the NHSE.Core.Item. This should only be used to get the string
     public NewItemSelected OnNewItemSelected;
+    public delegate void ReturnSearchWindow();
+    public ReturnSearchWindow OnReturnSearchWindow;
 
     //editor vars
     public RectTransform SelectionOverlay;
@@ -148,6 +150,9 @@ public class UI_SearchWindow : MonoBehaviour
         UnfrontButton.gameObject.SetActive(front);
         FrontBlocker.SetActive(front);
         isAtFront = front;
+
+        if (!front)
+            OnReturnSearchWindow?.Invoke();
     }
 
     public void UpdateFilter(Dropdown filt)
@@ -289,7 +294,7 @@ public class UI_SearchWindow : MonoBehaviour
         }
 
         CurrentSelectedIndex = spawnedObjects.IndexOf(sItem);
-        if (ItemInfo.GetItemKind(Convert.ToUInt16(CurrentItemID)).IsFlower())
+        if (ItemInfo.GetItemKind(Convert.ToUInt16(CurrentItemID)).IsFlowerGene())
         {
             FlowerButtonRoot.SetActive(true);
         }
@@ -395,7 +400,7 @@ public class UI_SearchWindow : MonoBehaviour
         SearchField.text = comboItem.Text;
         CurrentItemID = item.ItemId;
         ItemKind itemKind = ItemInfo.GetItemKind(Convert.ToUInt16(CurrentItemID));
-        if (itemKind.IsFlower())
+        if (itemKind.IsFlowerGene())
         {
             loadGenes(item.Genes);
             FlowerController.DaysWatered.text = item.DaysWatered.ToString();
@@ -444,7 +449,7 @@ public class UI_SearchWindow : MonoBehaviour
         ushort num = Convert.ToUInt16(CurrentItemID);
         ItemKind itemKind = ItemInfo.GetItemKind(num);
         item.ItemId = num;
-        if (itemKind.IsFlower())
+        if (itemKind.IsFlowerGene())
         {
             item.Genes = saveGenes();
             item.DaysWatered = int.Parse(FlowerController.DaysWatered.text);
