@@ -91,6 +91,14 @@ namespace NHSE.Injection
             return read.ToArray();
         }
 
+        public void SendBytes(byte[] encodeData)
+        {
+            lock (_sync)
+            {
+                AndroidUSBUtils.CurrentInstance.WriteToEndpoint(encodeData);
+            }
+        }
+
         private static T[] SubArray<T>(T[] data, int index, int length)
         {
             if (index + length > data.Length)
@@ -136,6 +144,11 @@ namespace NHSE.Injection
         }
 
         public void FreezeUnpause()
+        {
+            throw new NotImplementedException();
+        }
+
+        public byte[] GetBattery()
         {
             throw new NotImplementedException();
         }

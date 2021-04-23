@@ -13,7 +13,9 @@
         bool Connected { get; }
         byte[] ReadBytes(ulong offset, int length, RWMethod method = RWMethod.Heap);
         void WriteBytes(byte[] data, ulong offset, RWMethod method = RWMethod.Heap);
+        void SendBytes(byte[] encodeData);
         byte[] GetVersion();
+        byte[] GetBattery();
         ulong FollowMainPointer(long[] jumps);
         byte[] PeekMainPointer(long[] jumps, int length);
         void FreezeBytes(byte[] data, uint offset);
