@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Callbacks;
-using UnityEditor.iOS.Xcode;
+// using UnityEditor.iOS.Xcode;
 using Keiwando.NFSO;
 
 public class NativeFileSOBuild {
@@ -22,10 +22,10 @@ public class NativeFileSOBuild {
 	public static void OnPostProcessingBuild(BuildTarget target,
 											 string pathToProject) {
 		if (target == BuildTarget.iOS) {
-			PostProcessIOS(pathToProject);
+			//PostProcessIOS(pathToProject);
 		}
 	}
-
+/*
 	private static void PostProcessIOS(string path) {
 
 		if (SupportedFilePreferences.supportedFileTypes.Length == 0) {
@@ -103,7 +103,7 @@ public class NativeFileSOBuild {
 		// Based on eppz! (http://eppz.eu/blog/override-app-delegate-unity-ios-osx-1/)
 		project.AddBuildProperty(targetGUID, "OTHER_LDFLAGS", "-ObjC");
 	}
-
+*/
 	[MenuItem("Tools/NativeFileSO/RefreshAndroidPlugin")]
 	public static void UpdateAndroidPlugin() {
 
